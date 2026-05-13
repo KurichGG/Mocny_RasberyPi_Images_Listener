@@ -1,0 +1,16 @@
+﻿namespace Mocny_RasberyPi_Images_Listener.DTOs
+{
+    public class ScheduleDto
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public int? ImageId { get; set; }
+        public int? CollectionId { get; set; }
+        public int ScreenId { get; set; }
+        public DateTime StartDate { get; set; }
+        public DateTime EndDate { get; set; }
+        public bool IsRecurring { get; set; }
+        public string? RecurrencePattern { get; set; }
+        public int Priority { get; set; }
+    }
+}
