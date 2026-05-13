@@ -1,0 +1,6 @@
+@Mocny_RasberyPi_Images_Listener_HostAddress = http://localhost:5041
+
+GET {{Mocny_RasberyPi_Images_Listener_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
