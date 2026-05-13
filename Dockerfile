@@ -7,7 +7,7 @@ RUN dotnet restore "Mocny_RasberyPi_Images_Listener.csproj"
 COPY . .
 RUN dotnet build "Mocny_RasberyPi_Images_Listener.csproj" -c Release -o /app/build
 
-FROM mcr.microsoft.com/dotnet/runtime:10.0 AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 COPY --from=build /app/build .
 
