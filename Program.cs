@@ -95,7 +95,7 @@ namespace Mocny_RasberyPi_Images_Listener
                     var adminUser = new User
                     {
                         Username = "admin",
-                        PasswordHash = BCrypt.HashPassword("admin"),
+                        PasswordHash = BCrypt.Net.BCrypt.HashPassword("admin"),
                         Role = "Admin",
                         CreatedAt = DateTime.UtcNow
                     };
