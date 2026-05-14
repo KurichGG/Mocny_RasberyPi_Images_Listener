@@ -72,13 +72,15 @@ namespace Mocny_RasberyPi_Images_Listener
             var app = builder.Build();
 
             // Apply migrations automatically (dev only)
-            using (var scope = app.Services.CreateScope())
-            {
-                var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                db.Database.Migrate();
-            }
-
             if (app.Environment.IsDevelopment())
+            {
+                using (var scope = app.Services.CreateScope())
+                {
+                    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                    db.Database.Migrate();
+                }
+            }
+            if (app.Environment.IsDevelopment() || !app.Environment.IsProduction())
             {
                 app.UseSwagger();
                 app.UseSwaggerUI(c =>
