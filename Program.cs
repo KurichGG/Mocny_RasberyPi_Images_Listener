@@ -1,8 +1,10 @@
 using System.Text;
+using BCrypt.Net;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Mocny_RasberyPi_Images_Listener.Data;
+using Mocny_RasberyPi_Images_Listener.Models;
 using Mocny_RasberyPi_Images_Listener.Services;
 
 namespace Mocny_RasberyPi_Images_Listener
@@ -45,11 +47,13 @@ namespace Mocny_RasberyPi_Images_Listener
                 });
 
             // CORS - dla React frontend
-            // CORS
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("AllowFrontend", policy =>
-                    policy.WithOrigins("http://localhost:5173", "http://localhost:3000")
+                    policy.WithOrigins(
+                        "http://localhost:5173",
+                        "http://localhost:3000",
+                        "https://mocne-ekrany-react-aspnetcore.vercel.app")
                           .AllowAnyHeader()
                           .AllowAnyMethod()
                           .AllowCredentials());
@@ -80,6 +84,26 @@ namespace Mocny_RasberyPi_Images_Listener
                     db.Database.Migrate();
                 }
             }
+
+            // Seed default admin user
+            using (var scope = app.Services.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+                if (!db.Users.Any(u => u.Username == "admin"))
+                {
+                    var adminUser = new User
+                    {
+                        Username = "admin",
+                        PasswordHash = BCrypt.HashPassword("admin"),
+                        Role = "Admin",
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    db.Users.Add(adminUser);
+                    db.SaveChanges();
+                }
+            }
+
             if (app.Environment.IsDevelopment() || !app.Environment.IsProduction())
             {
                 app.UseSwagger();
