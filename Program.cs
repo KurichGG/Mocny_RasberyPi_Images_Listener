@@ -76,14 +76,13 @@ namespace Mocny_RasberyPi_Images_Listener
             var app = builder.Build();
 
             // Apply migrations automatically (dev only)
-            if (app.Environment.IsDevelopment())
-            {
+           
                 using (var scope = app.Services.CreateScope())
                 {
                     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
                     db.Database.Migrate();
                 }
-            }
+            
 
             // Seed default admin user
             using (var scope = app.Services.CreateScope())
