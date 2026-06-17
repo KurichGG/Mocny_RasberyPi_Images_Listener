@@ -1,7 +1,8 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Mocny_RasberyPi_Images_Listener.DTOs;
 using Mocny_RasberyPi_Images_Listener.Services;
-using System.Security.Claims;
 
 namespace Mocny_RasberyPi_Images_Listener.Controllers
 {
@@ -72,11 +73,21 @@ namespace Mocny_RasberyPi_Images_Listener.Controllers
         [HttpPost("{collectionId}/items")]
         public async Task<IActionResult> AddItemToCollection(int collectionId, [FromBody] AddCollectionItemRequest request)
         {
-            var result = await _collectionService.AddItemToCollection(collectionId, request.ImageId, request.Order, request.DisplayDurationSeconds);
-            if (!result)
+            var item = await _collectionService.AddItemToCollection(collectionId, request.ImageId, request.Order, request.DisplayDurationSeconds);
+            if (item == null)
                 return BadRequest(new { message = "Failed to add item to collection" });
 
-            return Ok(new { message = "Item added to collection" });
+            return Ok(item);
+        }
+
+        [HttpPut("{collectionId}/items/{itemId}")]
+        public async Task<IActionResult> UpdateItemInCollection(int collectionId, int itemId, [FromBody] UpdateCollectionItemRequest request)
+        {
+            var result = await _collectionService.UpdateCollectionItem(collectionId, itemId, request.Order, request.DisplayDurationSeconds);
+            if (!result)
+                return NotFound(new { message = "Item not found in collection" });
+
+            return NoContent();
         }
 
         [HttpDelete("{collectionId}/items/{itemId}")]

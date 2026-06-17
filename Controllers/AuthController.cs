@@ -19,39 +19,12 @@ namespace Mocny_RasberyPi_Images_Listener.Controllers
         public IActionResult Login([FromBody] LoginRequest request)
         {
             if (string.IsNullOrEmpty(request.Username) || string.IsNullOrEmpty(request.Password))
-            {
                 return BadRequest(new { message = "Username and password required" });
-            }
 
             var response = _authService.Login(request);
 
             if (!response.Success)
-            {
                 return Unauthorized(response);
-            }
-
-            return Ok(response);
-        }
-
-        [HttpPost("register")]
-        public IActionResult Register([FromBody] LoginRequest request)
-        {
-            if (string.IsNullOrEmpty(request.Username) || string.IsNullOrEmpty(request.Password))
-            {
-                return BadRequest(new { message = "Username and password required" });
-            }
-
-            if (request.Password.Length < 6)
-            {
-                return BadRequest(new { message = "Password must be at least 6 characters" });
-            }
-
-            var response = _authService.Register(request);
-
-            if (!response.Success)
-            {
-                return BadRequest(response);
-            }
 
             return Ok(response);
         }
@@ -61,5 +34,6 @@ namespace Mocny_RasberyPi_Images_Listener.Controllers
         {
             return Ok(new { message = "Logout successful" });
         }
+
     }
 }

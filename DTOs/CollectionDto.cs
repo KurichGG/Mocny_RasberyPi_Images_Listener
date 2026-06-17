@@ -6,5 +6,6 @@
         public string Name { get; set; } = string.Empty;
         public int ItemCount { get; set; }
         public DateTime CreatedAt { get; set; }
+        public List<CollectionItemDto> Items { get; set; } = new();
     }
 }

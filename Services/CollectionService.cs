@@ -32,6 +32,7 @@ namespace Mocny_RasberyPi_Images_Listener.Services
         {
             var collection = await _context.Collections
                 .Include(c => c.Items)
+                    .ThenInclude(i => i.Image)
                 .FirstOrDefaultAsync(c => c.Id == id);
 
             if (collection == null) return null;
@@ -41,7 +42,19 @@ namespace Mocny_RasberyPi_Images_Listener.Services
                 Id = collection.Id,
                 Name = collection.Name,
                 ItemCount = collection.Items.Count,
-                CreatedAt = collection.CreatedAt
+                CreatedAt = collection.CreatedAt,
+                Items = collection.Items
+                    .OrderBy(i => i.Order)
+                    .Select(i => new CollectionItemDto
+                    {
+                        Id = i.Id,
+                        ImageId = i.ImageId,
+                        ImageName = i.Image.Name,
+                        ThumbnailPath = i.Image.ThumbnailPath,
+                        Order = i.Order,
+                        DisplayDurationSeconds = i.DisplayDurationSeconds
+                    })
+                    .ToList()
             };
         }
 
@@ -86,13 +99,13 @@ namespace Mocny_RasberyPi_Images_Listener.Services
             return true;
         }
 
-        public async Task<bool> AddItemToCollection(int collectionId, int imageId, int order, int displayDurationSeconds)
+        public async Task<CollectionItemDto?> AddItemToCollection(int collectionId, int imageId, int order, int displayDurationSeconds)
         {
             var collection = await _context.Collections.FindAsync(collectionId);
-            if (collection == null) return false;
+            if (collection == null) return null;
 
             var image = await _context.Images.FindAsync(imageId);
-            if (image == null) return false;
+            if (image == null) return null;
 
             var item = new CollectionItem
             {
@@ -103,6 +116,26 @@ namespace Mocny_RasberyPi_Images_Listener.Services
             };
 
             _context.CollectionItems.Add(item);
+            await _context.SaveChangesAsync();
+
+            return new CollectionItemDto
+            {
+                Id = item.Id,
+                ImageId = image.Id,
+                ImageName = image.Name,
+                ThumbnailPath = image.ThumbnailPath,
+                Order = item.Order,
+                DisplayDurationSeconds = item.DisplayDurationSeconds
+            };
+        }
+
+        public async Task<bool> UpdateCollectionItem(int collectionId, int itemId, int order, int displayDurationSeconds)
+        {
+            var item = await _context.CollectionItems.FindAsync(itemId);
+            if (item == null || item.CollectionId != collectionId) return false;
+
+            item.Order = order;
+            item.DisplayDurationSeconds = displayDurationSeconds;
             await _context.SaveChangesAsync();
             return true;
         }
