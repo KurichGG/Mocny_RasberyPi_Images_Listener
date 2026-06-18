@@ -129,14 +129,11 @@ namespace Mocny_RasberyPi_Images_Listener
                 }
             }
 
-            if (app.Environment.IsDevelopment() || !app.Environment.IsProduction())
+            app.UseSwagger();
+            app.UseSwaggerUI(c =>
             {
-                app.UseSwagger();
-                app.UseSwaggerUI(c =>
-                {
-                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Screen Manager API v1");
-                });
-            }
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "Screen Manager API v1");
+            });
 
             if (!app.Environment.IsDevelopment())
             {
