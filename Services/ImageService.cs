@@ -15,7 +15,12 @@ namespace Mocny_RasberyPi_Images_Listener.Services
         {
             _context = context;
             _environment = environment;
-            _uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads", "images");
+
+            var webRoot = !string.IsNullOrEmpty(_environment.WebRootPath)
+                ? _environment.WebRootPath
+                : Path.Combine(_environment.ContentRootPath, "wwwroot");
+
+            _uploadsFolder = Path.Combine(webRoot, "uploads", "images");
 
             if (!Directory.Exists(_uploadsFolder))
                 Directory.CreateDirectory(_uploadsFolder);
