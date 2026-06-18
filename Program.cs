@@ -142,6 +142,7 @@ namespace Mocny_RasberyPi_Images_Listener
             app.UseCors("AllowFrontend");
             app.UseAuthentication();
             app.UseAuthorization();
+            app.UseStaticFiles();
             app.MapControllers();
             app.Run();
         }
