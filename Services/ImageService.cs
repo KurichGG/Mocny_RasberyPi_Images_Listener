@@ -10,8 +10,9 @@ namespace Mocny_RasberyPi_Images_Listener.Services
         private readonly AppDbContext _context;
         private readonly IWebHostEnvironment _environment;
         private readonly string _uploadsFolder;
+        private readonly LogService _logService;
 
-        public ImageService(AppDbContext context, IWebHostEnvironment environment)
+        public ImageService(AppDbContext context, IWebHostEnvironment environment, LogService logService)
         {
             _context = context;
             _environment = environment;
@@ -24,6 +25,7 @@ namespace Mocny_RasberyPi_Images_Listener.Services
 
             if (!Directory.Exists(_uploadsFolder))
                 Directory.CreateDirectory(_uploadsFolder);
+            _logService = logService;
         }
 
         public async Task<List<ImageDto>> GetAllImages()
@@ -78,6 +80,8 @@ namespace Mocny_RasberyPi_Images_Listener.Services
             _context.Images.Add(image);
             await _context.SaveChangesAsync();
 
+            await _logService.LogAction(uploadedBy, "IMAGE_UPLOADED", "Image", image.Id, $"Przesłano grafikę: {image.Name}");
+
             return new ImageDto
             {
                 Id = image.Id,
@@ -91,7 +95,7 @@ namespace Mocny_RasberyPi_Images_Listener.Services
             };
         }
 
-        public async Task<bool> DeleteImage(int id)
+        public async Task<bool> DeleteImage(int id, int? userId)
         {
             var image = await _context.Images.FindAsync(id);
             if (image == null) return false;
@@ -107,6 +111,8 @@ namespace Mocny_RasberyPi_Images_Listener.Services
 
             _context.Images.Remove(image);
             await _context.SaveChangesAsync();
+            await _logService.LogAction(userId, "IMAGE_DELETED", "Image", id, $"Usunięto grafikę: {image.Name}");
+
             return true;
         }
 

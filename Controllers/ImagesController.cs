@@ -46,7 +46,8 @@ namespace Mocny_RasberyPi_Images_Listener.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteImage(int id)
         {
-            var result = await _imageService.DeleteImage(id);
+            var userId = int.TryParse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, out var uid) ? uid : (int?)null;
+            var result = await _imageService.DeleteImage(id, userId);
             if (!result)
                 return NotFound(new { message = "Image not found" });
 
