@@ -11,7 +11,6 @@ namespace Mocny_RasberyPi_Images_Listener.Controllers
     public class ScreensController : ControllerBase
     {
         private readonly ScreenService _screenService;
-       
         private readonly MqttPublisherService _mqttService;
 
         public ScreensController(ScreenService screenService, MqttPublisherService mqttService)
@@ -19,36 +18,7 @@ namespace Mocny_RasberyPi_Images_Listener.Controllers
             _screenService = screenService;
             _mqttService = mqttService;
         }
-        [HttpPost("{id}/display-image")]
-        public async Task<IActionResult> DisplayImage(int id, [FromBody] DisplayImageRequest request)
-        {
-            var screen = await _screenService.GetScreenById(id);
-            if (screen == null)
-                return NotFound(new { message = "Screen not found" });
 
-            await _mqttService.PublishCommandAsync(screen.UniqueIdentifier, new
-            {
-                command = "show_image",
-                imageId = request.ImageId
-            });
-
-            return Ok(new { message = "Polecenie wysłane" });
-        }
-
-        [HttpPost("{id}/power")]
-        public async Task<IActionResult> PowerControl(int id, [FromBody] PowerRequest request)
-        {
-            var screen = await _screenService.GetScreenById(id);
-            if (screen == null)
-                return NotFound(new { message = "Screen not found" });
-
-            await _mqttService.PublishCommandAsync(screen.UniqueIdentifier, new
-            {
-                command = request.PowerOn ? "power_on" : "power_off"
-            });
-
-            return Ok(new { message = "Polecenie wysłane" });
-        }
         [HttpGet]
         public async Task<IActionResult> GetAllScreens()
         {
@@ -100,22 +70,43 @@ namespace Mocny_RasberyPi_Images_Listener.Controllers
             return NoContent();
         }
 
-        [HttpPost("{id}/power")]
-        public async Task<IActionResult> SetScreenPower(int id, [FromBody] SetPowerRequest request)
+        [HttpPost("{id}/display-image")]
+        public async Task<IActionResult> DisplayImage(int id, [FromBody] DisplayImageRequest request)
         {
-            var result = await _screenService.SetScreenPower(id, request.IsOnline);
-            if (!result)
+            var screen = await _screenService.GetScreenById(id);
+            if (screen == null)
                 return NotFound(new { message = "Screen not found" });
 
+            await _mqttService.PublishCommandAsync(screen.UniqueIdentifier, new
+            {
+                command = "show_image",
+                imageId = request.ImageId
+            });
+
+            return Ok(new { message = "Polecenie wysłane" });
+        }
+
+        [HttpPost("{id}/power")]
+        public async Task<IActionResult> PowerControl(int id, [FromBody] PowerRequest request)
+        {
             var screen = await _screenService.GetScreenById(id);
-            return Ok(screen);
+            if (screen == null)
+                return NotFound(new { message = "Screen not found" });
+
+            // Wyślij polecenie przez MQTT do Raspberry Pi
+            await _mqttService.PublishCommandAsync(screen.UniqueIdentifier, new
+            {
+                command = request.PowerOn ? "power_on" : "power_off"
+            });
+
+            // Zaktualizuj status w bazie danych
+            await _screenService.SetScreenPower(id, request.PowerOn);
+
+            var updated = await _screenService.GetScreenById(id);
+            return Ok(updated);
         }
     }
 
-    public class SetPowerRequest
-    {
-        public bool IsOnline { get; set; }
-    }
     public class DisplayImageRequest
     {
         public int ImageId { get; set; }
