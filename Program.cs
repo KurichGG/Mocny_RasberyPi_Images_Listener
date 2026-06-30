@@ -69,6 +69,8 @@ namespace Mocny_RasberyPi_Images_Listener
             builder.Services.AddScoped<LogService>();
             builder.Services.AddScoped<UserService>();
             builder.Services.AddScoped<LogService>();
+            builder.Services.AddHostedService<ScheduleBackgroundService>();
+
             builder.Services.AddSingleton<MqttPublisherService>();
             builder.Services.AddControllers();
             builder.Services.AddSwaggerGen(c =>

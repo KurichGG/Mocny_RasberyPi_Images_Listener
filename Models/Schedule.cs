@@ -16,5 +16,6 @@
         public string? RecurrencePattern { get; set; } // e.g., "daily", "weekly", "monthly"
         public int Priority { get; set; } = 0;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public bool IsActivated { get; set; } = false;
     }
 }
