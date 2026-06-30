@@ -103,6 +103,10 @@ namespace Mocny_RasberyPi_Images_Listener.Services
             schedule.RecurrencePattern = request.RecurrencePattern;
             schedule.Priority = request.Priority;
 
+            // Reset flag - edycja powinna umożliwić ponowne przetworzenie przez background service
+            schedule.IsActivated = false;
+            schedule.IsClosed = false;
+
             await _context.SaveChangesAsync();
             return true;
         }
