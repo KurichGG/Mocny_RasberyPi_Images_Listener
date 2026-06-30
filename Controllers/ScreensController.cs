@@ -11,12 +11,44 @@ namespace Mocny_RasberyPi_Images_Listener.Controllers
     public class ScreensController : ControllerBase
     {
         private readonly ScreenService _screenService;
+       
+        private readonly MqttPublisherService _mqttService;
 
-        public ScreensController(ScreenService screenService)
+        public ScreensController(ScreenService screenService, MqttPublisherService mqttService)
         {
             _screenService = screenService;
+            _mqttService = mqttService;
+        }
+        [HttpPost("{id}/display-image")]
+        public async Task<IActionResult> DisplayImage(int id, [FromBody] DisplayImageRequest request)
+        {
+            var screen = await _screenService.GetScreenById(id);
+            if (screen == null)
+                return NotFound(new { message = "Screen not found" });
+
+            await _mqttService.PublishCommandAsync(screen.UniqueIdentifier, new
+            {
+                command = "show_image",
+                imageId = request.ImageId
+            });
+
+            return Ok(new { message = "Polecenie wysłane" });
         }
 
+        [HttpPost("{id}/power")]
+        public async Task<IActionResult> PowerControl(int id, [FromBody] PowerRequest request)
+        {
+            var screen = await _screenService.GetScreenById(id);
+            if (screen == null)
+                return NotFound(new { message = "Screen not found" });
+
+            await _mqttService.PublishCommandAsync(screen.UniqueIdentifier, new
+            {
+                command = request.PowerOn ? "power_on" : "power_off"
+            });
+
+            return Ok(new { message = "Polecenie wysłane" });
+        }
         [HttpGet]
         public async Task<IActionResult> GetAllScreens()
         {
@@ -83,5 +115,14 @@ namespace Mocny_RasberyPi_Images_Listener.Controllers
     public class SetPowerRequest
     {
         public bool IsOnline { get; set; }
+    }
+    public class DisplayImageRequest
+    {
+        public int ImageId { get; set; }
+    }
+
+    public class PowerRequest
+    {
+        public bool PowerOn { get; set; }
     }
 }
