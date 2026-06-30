@@ -9,12 +9,15 @@ namespace Mocny_RasberyPi_Images_Listener.Services
     {
         private readonly AppDbContext _context;
 
-        public ScheduleService(AppDbContext context)
+        private readonly MqttPublisherService _mqttService;
+
+        public ScheduleService(AppDbContext context, MqttPublisherService mqttService)
         {
             _context = context;
+            _mqttService = mqttService;
         }
 
-        public async Task<List<ScheduleDto>> GetAllSchedules()
+      public async Task<List<ScheduleDto>> GetAllSchedules()
         {
             return await _context.Schedules
                 .Include(s => s.Screen)
@@ -113,8 +116,20 @@ namespace Mocny_RasberyPi_Images_Listener.Services
 
         public async Task<bool> DeleteSchedule(int id)
         {
-            var schedule = await _context.Schedules.FindAsync(id);
+            var schedule = await _context.Schedules
+                .Include(s => s.Screen)
+                .FirstOrDefaultAsync(s => s.Id == id);
+
             if (schedule == null) return false;
+
+            // Jeśli harmonogram był aktywny i jeszcze nie zamknięty - wyczyść ekran
+            if (schedule.IsActivated && !schedule.IsClosed)
+            {
+                await _mqttService.PublishCommandAsync(schedule.Screen.UniqueIdentifier, new
+                {
+                    command = "clear"
+                });
+            }
 
             _context.Schedules.Remove(schedule);
             await _context.SaveChangesAsync();
