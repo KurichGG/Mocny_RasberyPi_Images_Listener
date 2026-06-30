@@ -17,5 +17,6 @@
         public int Priority { get; set; } = 0;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public bool IsActivated { get; set; } = false;
+        public bool IsClosed { get; set; } = false;
     }
 }

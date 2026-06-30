@@ -44,7 +44,7 @@ namespace Mocny_RasberyPi_Images_Listener.Services
             var now = DateTime.UtcNow;
             var publicUrl = _configuration["Backend:PublicUrl"];
 
-            // --- Harmonogramy do aktywacji ---
+            // --- Harmonogramy do aktywacji (StartDate nadszedł) ---
             var dueSchedules = await context.Schedules
                 .Include(s => s.Screen)
                 .Where(s => !s.IsActivated
@@ -96,19 +96,36 @@ namespace Mocny_RasberyPi_Images_Listener.Services
                 await context.SaveChangesAsync();
             }
 
-            // --- Reset harmonogramów cyklicznych po zakończeniu okresu ---
-            var expiredRecurring = await context.Schedules
-                .Where(s => s.IsActivated && s.IsRecurring && s.EndDate < now)
+            // --- Harmonogramy do zamknięcia (EndDate minął) ---
+            var schedulesToClose = await context.Schedules
+                .Include(s => s.Screen)
+                .Where(s => s.IsActivated
+                         && !s.IsClosed
+                         && s.EndDate < now)
                 .ToListAsync();
 
-            foreach (var schedule in expiredRecurring)
+            foreach (var schedule in schedulesToClose)
             {
-                schedule.IsActivated = false;
-                schedule.StartDate = ShiftDate(schedule.StartDate, schedule.RecurrencePattern);
-                schedule.EndDate = ShiftDate(schedule.EndDate, schedule.RecurrencePattern);
+                _logger.LogInformation($"Zamykam harmonogram: {schedule.Name} dla ekranu {schedule.Screen.UniqueIdentifier}");
+
+                await mqttService.PublishCommandAsync(schedule.Screen.UniqueIdentifier, new
+                {
+                    command = "clear"
+                });
+
+                schedule.IsClosed = true;
+
+                // Jeśli recurring – przygotuj do następnego cyklu
+                if (schedule.IsRecurring)
+                {
+                    schedule.IsActivated = false;
+                    schedule.IsClosed = false;
+                    schedule.StartDate = ShiftDate(schedule.StartDate, schedule.RecurrencePattern);
+                    schedule.EndDate = ShiftDate(schedule.EndDate, schedule.RecurrencePattern);
+                }
             }
 
-            if (expiredRecurring.Any())
+            if (schedulesToClose.Any())
             {
                 await context.SaveChangesAsync();
             }
