@@ -1,3 +1,4 @@
 <Solution>
+  <Folder Name="/mosquitto-broker/" />
   <Project Path="Mocny_RasberyPi_Images_Listener.csproj" />
 </Solution>
